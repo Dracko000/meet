@@ -5,8 +5,6 @@ require_once 'database.php';
 
 try {
     $dbSetup = new DatabaseSetup();
-    // Ensure tables exist
-    $dbSetup->createTables();
 } catch (Exception $e) {
     die("Database connection failed: " . $e->getMessage());
 }

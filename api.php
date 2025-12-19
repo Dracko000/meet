@@ -17,8 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     $dbSetup = new DatabaseSetup();
-    // Ensure tables exist
-    $dbSetup->createTables();
 } catch (Exception $e) {
     die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
 }
