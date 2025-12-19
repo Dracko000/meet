@@ -1,15 +1,44 @@
 <?php
 // Video conferencing application entry point
 session_start();
+require_once 'database.php';
+
+try {
+    $dbSetup = new DatabaseSetup();
+    // Ensure tables exist
+    $dbSetup->createTables();
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
 // Generate a random room ID if not provided
 if (!isset($_GET['room']) || empty($_GET['room'])) {
     $roomId = bin2hex(random_bytes(8)); // 16 character random room ID
+
+    // Create the room in database
+    try {
+        $dbSetup->createRoom($roomId, "Meeting Room");
+    } catch (Exception $e) {
+        // If room creation fails, still proceed but log the error
+        error_log("Failed to create room in database: " . $e->getMessage());
+    }
+
     header("Location: ?room=" . $roomId);
     exit();
 }
 
 $roomId = $_GET['room'];
+
+// Check if room exists in database
+$room = $dbSetup->getRoom($roomId);
+if (!$room) {
+    // Create room if it doesn't exist
+    try {
+        $dbSetup->createRoom($roomId, "Meeting Room");
+    } catch (Exception $e) {
+        error_log("Failed to create room in database: " . $e->getMessage());
+    }
+}
 ?>
 
 <!DOCTYPE html>

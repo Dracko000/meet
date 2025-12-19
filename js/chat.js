@@ -1,11 +1,13 @@
 // Chat functionality for the video conferencing app
 class ChatClient {
-    constructor() {
+    constructor(roomId) {
         this.messages = [];
         this.unreadCount = 0;
+        this.roomId = roomId;
+        this.clientId = 'client_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         this.initializeChat();
     }
-    
+
     initializeChat() {
         const messageForm = document.getElementById('message-form');
         if (messageForm) {
@@ -14,32 +16,83 @@ class ChatClient {
                 this.sendMessage();
             });
         }
-        
-        // Add sample messages for demo
+
+        // Load previous messages from server
+        this.loadPreviousMessages();
+
+        // Add initial system messages
         this.addMessage('System', 'Welcome to the meeting! Share the room ID with others to invite them.', 'system');
         this.addMessage('System', 'You joined the meeting.', 'system');
     }
-    
-    sendMessage() {
+
+    async sendMessage() {
         const messageInput = document.getElementById('message-input');
         if (!messageInput) return;
-        
+
         const message = messageInput.value.trim();
         if (!message) return;
-        
-        // Add message to UI
-        this.addMessage('You', message, 'sent');
-        
-        // Clear input
-        messageInput.value = '';
-        
-        // In a real implementation, this would send the message via WebSocket
-        // broadcastMessageToParticipants(message);
-        
-        // Simulate receiving a response after a delay
-        this.simulateIncomingMessage();
+
+        try {
+            // Send message to server
+            const response = await fetch('/signaling.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'message',
+                    roomId: this.roomId,
+                    senderId: this.clientId,
+                    message: message
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.type === 'message_saved') {
+                // Add message to UI
+                this.addMessage('You', message, 'sent');
+
+                // Clear input
+                messageInput.value = '';
+            } else {
+                console.error('Failed to send message:', result);
+                this.showError('Failed to send message');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.showError('Failed to send message');
+        }
     }
-    
+
+    async loadPreviousMessages() {
+        try {
+            const response = await fetch('/signaling.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'get-messages',
+                    roomId: this.roomId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.type === 'messages' && result.messages) {
+                result.messages.forEach(msg => {
+                    // Format: "HH:MM" from the timestamp
+                    const time = new Date(msg.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    this.addMessage(`${msg.sender_id} (${time})`, msg.message, 'received');
+                });
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            // Continue without previous messages
+        }
+    }
+
     addMessage(sender, content, type = 'received') {
         const messagesContainer = document.getElementById('messages-container');
         if (!messagesContainer) return;
@@ -75,26 +128,29 @@ class ChatClient {
             this.updateUnreadCount();
         }
     }
-    
-    simulateIncomingMessage() {
-        // Simulate receiving a message from another participant
+
+    showError(message) {
+        // Show error message in the UI
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.style.position = 'fixed';
+        errorMsg.style.top = '60px';
+        errorMsg.style.left = '50%';
+        errorMsg.style.transform = 'translateX(-50%)';
+        errorMsg.style.backgroundColor = '#ea4335';
+        errorMsg.style.color = 'white';
+        errorMsg.style.padding = '10px 20px';
+        errorMsg.style.borderRadius = '4px';
+        errorMsg.style.zIndex = '1000';
+        errorMsg.textContent = message;
+
+        document.body.appendChild(errorMsg);
+
         setTimeout(() => {
-            const responses = [
-                'Hello everyone!',
-                'Can you hear me?',
-                'That sounds great!',
-                'I agree with that point.',
-                'Let\'s move on to the next topic.',
-                'Good idea!',
-                'Thanks for sharing.',
-                'I have a question about that.'
-            ];
-            
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            this.addMessage('Participant 2', randomResponse, 'received');
-        }, 2000 + Math.random() * 3000);
+            errorMsg.remove();
+        }, 5000);
     }
-    
+
     updateUnreadCount() {
         const badge = document.getElementById('unread-count');
         if (badge) {
@@ -106,7 +162,7 @@ class ChatClient {
             }
         }
     }
-    
+
     markAsRead() {
         this.unreadCount = 0;
         this.updateUnreadCount();

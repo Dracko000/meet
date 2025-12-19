@@ -12,13 +12,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize WebRTC client
     const webrtcClient = new WebRTCClient(roomId);
-    
+
     // Store client instance in global scope for debugging
     window.webrtcClient = webrtcClient;
-    
+
+    // Initialize chat client
+    const chatClient = new ChatClient(roomId);
+    window.chatClient = chatClient; // For debugging
+
     // Set up UI event handlers
     setupEventListeners(webrtcClient);
-    
+
     // Initialize copy room functionality
     initializeCopyRoom(roomId);
 });
