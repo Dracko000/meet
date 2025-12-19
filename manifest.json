@@ -1,0 +1,36 @@
+{
+    "name": "Convertation - Video Conferencing",
+    "short_name": "Convertation",
+    "description": "Free video conferencing application like Google Meet",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#202124",
+    "theme_color": "#4285f4",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "assets/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/maskable_icon_x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/maskable_icon_x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
